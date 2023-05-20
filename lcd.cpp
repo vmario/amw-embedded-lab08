@@ -1,11 +1,3 @@
-/**
- * @file
- * @author Mariusz Chilmon <mariusz.chilmon@ctm.gdynia.pl>
- * @date 2023
- *
- * Implementacja sterowania wyświetlaczem LCD.
- */
-
 #include "lcd.hpp"
 
 #include "lcdDriver.hpp"
@@ -39,7 +31,7 @@ void Lcd::init() const
 	driver.initGpio();
 	driver.initLogic();
 	driver.init4Bit();
-	
+
 	CommandFunctionSet(FUNCTION_SET_OPTION_DUAL_LINE).write();
 	CommandDisplayControl().write();
 	CommandClear().write();

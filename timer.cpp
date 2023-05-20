@@ -1,11 +1,3 @@
-/**
- * @file
- * @author Mariusz Chilmon <mariusz.chilmon@ctm.gdynia.pl>
- * @date 2023
- * 
- * Implementacja przerwania od timera.
- */
-
 #include "timer.hpp"
 
 #include "lcd.hpp"
@@ -29,9 +21,9 @@ static constexpr uint8_t TIMER0_PRESCALER_256 = _BV(CS02);
 static constexpr uint8_t TIMER0_OCR_TICK = 250;
 
 /**
- * Liczba ticków timera, co ile występuje tick systemowy 1Hz.
+ * Liczba ticków timera, co ile występuje tick systemowy 5Hz.
  */
-static constexpr uint8_t SYSTEM_TICK_INTERVAL = 125;
+static constexpr uint8_t SYSTEM_TICK_INTERVAL = 25;
 
 static volatile bool expired; ///< Czy timer ustawił flagę?
 
@@ -41,7 +33,7 @@ static volatile bool expired; ///< Czy timer ustawił flagę?
 ISR(TIMER0_COMPA_vect)
 {
 	static uint32_t interval;
-	if (++interval > SYSTEM_TICK_INTERVAL / 5) {
+	if (++interval > SYSTEM_TICK_INTERVAL) {
 		interval = 0;
 		expired = true;
 	}

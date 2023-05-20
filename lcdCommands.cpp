@@ -1,13 +1,3 @@
-/**
- * @file
- * @author Mariusz Chilmon <mariusz.chilmon@ctm.gdynia.pl>
- * @date 2023
- * 
- * Implementacja komend sterujących wyświetlaczem.
- * 
- * Opóźnienia na podstawie czasów wykonania danej komendy z dokumentacji wyświetlacza.
- */
-
 #include "lcdCommands.hpp"
 
 #include <util/delay.h>

@@ -1,6 +1,6 @@
 ---
 title: "Instrukcja laboratorium systemów wbudowanych"
-subtitle: "Ćwiczenie 7: Sterowanie z histerezą i dostęp do pamięci EEPROM mikrokontrolera"
+subtitle: "Ćwiczenie 8: Odmierzanie czasu i definiowanie własnych znaków na wyświetlaczu alfanumerycznym"
 author: [Mariusz Chilmon <<mariusz.chilmon@ctm.gdynia.pl>>]
 lang: "pl"
 titlepage: yes
@@ -19,62 +19,96 @@ header-includes: |
 
 Celem ćwiczenia jest zapoznanie się z:
 
-* realizacją menu konfiguracyjnego na wyświetlaczu alfanumerycznym,
-* sterowaniem temperaturą z uwzględenieniem histerezy,
-* obsługą wbudowanej w mikrokontroler pamięci EEPROM.
+* odliczaniem czasu,
+* formatowaniem czasu na wyświetlaczu,
+* sterowaniem brzęczykiem,
+* definiowaniem własnych symboli w sterowniku wyświetlacza alfanumerycznego.
 
 # Uruchomienie programu wyjściowego
 
 1. Umieść zworki na pinach `RS`, `E` i `D4`…`D7` złącza `J10` (na lewo od buzzera).
 1. Zworkę `J15` (nad buzzerem) ustaw w pozycji `RW->GND`.
 1. Umieść wyświetlacz w złączu `DIS1`.
-1. Podłącz pin `1WIRE` pod wyświetlaczem siedmiosegmentowym LED do pinu `PD0` mikrokontrolera.
-1. Podłącz pin `ENC0 B` pod wyświetlaczem siedmiosegmentowym LED do pinu `PD1` mikrokontrolera.
-1. Podłącz pin `ENC0 A` pod wyświetlaczem siedmiosegmentowym LED do pinu `PD2` mikrokontrolera.
-1. Podłącz diodę `LED1` do pinu `PD3` mikrokontrolera.
-1. Podłącz pin `ENC0 SW` pod wyświetlaczem siedmiosegmentowym LED do pinu `PD4` mikrokontrolera.
-1. Po włączeniu zasilania wyświetlacz pokaże bieżącą temperaturę `Tcurrent` oraz temperaturę zadaną `Tt`.
-1. Po wciśnięciu przyciska impulsatora możliwe jest ustawienie temperatury zadanej.
-1. Gdy temperatura bieżąca jest niższa od zadanej, włączana jest `LED1`.
+1. Podłącz przycisk `K1` do pinu `PD0` mikrokontrolera.
+1. Podłącz przycisk `K2` do pinu `PD1` mikrokontrolera.
+1. Podłącz pin `BUZ` pod wyświetlaczem siedmiosegmentowym LED do pinu `PD3` mikrokontrolera.
+1. Po uruchomieniu na wyświetlaczu pokaże się komunikat _Brushing time!_.
 
 # Zadanie podstawowe
 
 ## Wymagania funkcjonalne
 
-Celem zadania podstawowego jest dodanie do termostatu regulowanej histerezy oraz rozbudowa menu obsługiwanego przez wyświetlacz alfanumeryczny i impulsator.
+Celem zadania podstawowego jest oprogramowanie timera pomagającego dzieciom w nabyciu nawyku poprawnego szczotkowania zębów. Urządzenie ma odliczać czas potrzebny na umycie kolejnych ćwiartek uzębienia.
 
-![Histereza w termostacie sterującym grzałką](hysteresis.svg){width=400px}
+1. Po wciśnięciu przycisku `K1` rozpoczyna się odliczanie czasu w miejscu komunikatu `time!`.
+1. Czas do zakończenia szczotkowania wyświetlany jest w formacie `0:00`, wskazując pozostałe minuty i sekundy.
+1. Czas szczotkowania podzielony jest na cztery interwały sygnalizowane wyświetlaniem symboli `<<<` i `>>>` w czterech rogach ekranu.
+1. Ukończenie każdego z pierwszych trzech interwałów sygnalizowane jest pojedynczym krótkim sygnałem dźwiękowym.
+1. Ukończenie czwartego interwału sygnalizowane jest kilkoma krótkimi sygnałami dźwiękowymi.
+1. Po zakończeniu odliczania wyświetlany jest ekran startowy.
+1. W każdej chwili można przerwać odmierzanie czasu, wciskając klawisz `K2`, co powoduje wyświetlanie ekranu startowego.
 
-Zadaniem histerezy jest zmniejszenie częstotliwości przełączania elementu wykonawczego, kosztem zmniejszenia precyzji regulowanego parametru.
+Przykładowe stany ekranu:
 
-W naszym przypadku, gdy mierzona temperatura oscyluje wokół temperatury zadanej $T_t$ np. z powodu ruchu powietrza w pomieszczeniu albo szumu pomiarowego, może dojść do sytuacji, gdy element wykonywaczy byłby przełączany w bardzo krótkich odcinkach czasu. Jest to zjawisko, które może być szkodliwe dla elementu sterującego (np. w przekaźniku może dojść do wypalenia styków), jak i dla elementu wykonawczego (np. kompresor w lodówce może ulec szybkiemu zużyciu).
+```
+<<< Brushing
+      1:55
+```
 
-Histereza zazwyczaj jest jednym z parametrów, które są dostępne dla użytkownika jako nastawa, co pozwala mu ustalić kompromis między precyzją sterowania a częstotliwością przełączania.
+```
+<<< Brushing >>>
+      1:22
+```
+
+```
+<<< Brushing >>>
+<<<   0:42
+```
+
+```
+<<< Brushing >>>
+<<<   0:11   >>>
+```
 
 ## Modyfikacja programu
 
-1. Dodaj do klasy `Menu` obsługę jeszcze jednego obiektu typu `Parameter`, który będzie odpowiedzialny za wyświetlanie i zmianę wartości histerezy.
-1. Ogranicz zakres zmian temperatury zadanej do zakresu 0°C…40°C, a histerezy do zakresu 0°C…5°C.
-1. Zmodyfikuj metodę `Thermostat::onTemperature()` tak, by uwzględniała temperaturę zadaną $T_t$ i histerezę $T_h$, tj. włączenie grzałki ma następować przy temperaturze $T_t + T_h$ zaś wyłączenie przy temperaturze $T_t - T_h$.
+1. W metodzie `Keypad::init()` włącz rezystory podciągające na pinach, do których podłączone są klawisze.
+1. W metodzie `Keypad::key()` zwróć bieżący stan klawiatury, który będzie przekazany do `Menu::onKey()`.
+1. W metodzie `Buzzer::init()` ustaw jako wyjściowy pin, do którego podłączony jest brzęczyk.
+1. Uzupełnij metody `Buzzer::shortBeep()` i `Buzzer::longBeep()`, tak by sygnalizowały brzęczykiem — odpowiednio — krótki dźwięk (wystarczy 10&nbsp;ms) i kilka krótkich dźwięków.
+1. Uzupełnij metody `Menu::refresh()` i `Menu::onKey()`, by zrealizować założoną funkcjonalność urządzenia.
+
+\awesomebox[teal]{2pt}{\faCode}{teal}{Stała \lstinline{TICKS_PER_SECOND} celowo ma zaniżoną wartość, aby przyspieszyć bieg odmierzanego czasu i ułatwić testowanie programu.}
+
+\awesomebox[teal]{2pt}{\faCode}{teal}{Można użyć zdefiniowanego typu wyliczeniowego \lstinline{enum PERIOD}, by określić poszczególne etapy procesu szczotkowania.}
+
+\awesomebox[purple]{2pt}{\faMicrochip}{purple}{Pamiętaj o przeznaczeniu rejestrów GPIO: rejestry \lstinline{DDR} określają kierunek pinu (wejściowy lub wyjściowy), rejestry \lstinline{PIN} odczytują stan pinu, a rejestry \lstinline{PORT} sterują stanem wyjściowym lub włączają rezystory podciągające pinu wejściowego.}
+
+\awesomebox[teal]{2pt}{\faCode}{teal}{Ponieważ dla obsługi brzęczyka odmierzamy krótkie odcinki czasu, nieopłacalne jest implementowanie ich odmierzania za pomocą timera. Użyj funkcji \lstinline{_delay_ms()} zdefiniowanej w pliku nagłówkowym \lstinline{util/delay.h}.}
 
 # Zadanie rozszerzone
 
 ## Wymagania funkcjonalne
 
-Celem zadania rozszerzonego jest dodanie do termostatu nieulotnej pamięci temperatury zadanej.
+Celem zadania rozszerzonego jest zdefiniowanie na wyświetlaczu alfanumerycznym własnego symbolu (klepsydry) i wyświetlenie go przed odliczanym czasem:
 
-1. Po wyjściu z edycji nastaw ustawione wartości zapisywane są w pamięci EEPROM mikrokontrolera.
-1. Po zresetowaniu mikrokontrolera wczytywana jest zapamiętana temperatura.
+\begin{lstlisting}[escapeinside={($}{$)}]
+<<< Brushing >>>
+<<<  ($\faHourglass[regular]$) 0:42
+\end{lstlisting}
+
+![Symbol klepsydry](hourglass.svg){width=140px}
 
 ## Modyfikacja programu
 
-1. Do klasy `Settings` dodaj metody `save()` i `restore()`, które — odpowiednio — zapiszą i&nbsp;przywrócą z pamięci EEPROM temperaturę zadaną i histerezę.
-1. Wywołaj je w metodzie `Menu::onEncoderPress()` i w funkcji `main()`.
+Korzystając z dokumentacji sterownika wyświetlacza alfanumerycznego HD44780 obsłuż definiowanie własnego symbolu w pamięci CGRAM.
 
-\awesomebox[purple]{2pt}{\faMicrochip}{purple}{Pamięć EEPROM ma ograniczoną liczbę cykli czyszczenia/zapisu (w przypadku mikrokokntrolerów AVR gwarantowana wartość to 100~000), należy więc zadbać, by ograniczyć miejsca w~programie, gdzie może następować zapis.}
+1. Zdefiniuj komendę `CommandSetCgramAddress` analogicznie do już istniejącej komendy `CommandSetDdramAddress`.
+1. W metodzie `Lcd::init()` dodaj wywołanie nowoutworzonej komendy, tak by zaadresować żądany bajt w pamięci CGRAM, np. `0x00`. Następnie wyślij 7 kolejnych wierszy z pikselami, korzystając z obiektu `Data` (zapis do pamięci CGRAM przebiega identycznie jak zapis znaków na wyświetlaczu).
+1. Wyświetl nowy znak w `Menu::refresh()`.
 
-\awesomebox[teal]{2pt}{\faCode}{teal}{W pliku nagłówkowym \lstinline{avr/eeprom.h} zadeklarowane są funkcje obsługujące pamięć EEPROM. Należy zauważyć, że zamiast funkcji z grupy \lstinline{eeprom_write_XXX()} warto użyć funkcji \lstinline{eeprom_update_XXX()}, które dokonują zapisu tylko, gdy nowa wartość różni się od poprzedniej.}
+\awesomebox[purple]{2pt}{\faMicrochip}{purple}{Sterownik HD44780 pozwala definiować własne symbole, ale zapisywane są one w pamięci nieulotnej, więc mikrokontroler musi je wgrać na nowo przy każdym uruchomieniu.}
 
-\awesomebox[purple]{2pt}{\faMicrochip}{purple}{Wyczyszczona pamięć EEPROM nie jest wypełniona bajtami \lstinline{0x00}, ale \lstinline{0xFF}. Jest to częsta cecha pamięci nieulotnych.}
+\awesomebox[teal]{2pt}{\faCode}{teal}{Defniując symbol można skorzystać z wprowadzonych w standardzie C++14 binarnych literałów liczbowych postaci \lstinline{0b00000000}, co pozwala łatwo odwzorować w kodzie tablicę pikseli.}
 
-\awesomebox[teal]{2pt}{\faCode}{teal}{Liczba zmiennoprzecinkowa, w której wszystkie bity wykładnika są ustawione (co ma miejsce w wyczyszczonej pamięci EEPROM), nie jest poprawną wartością, ale \textit{nie-liczbą} (ang. \textit{NaN} — \textit{Not a Number}). Wartość taką można wykryć za pomocą makra \lstinline{isnan()} zdefiniowanego w pliku nagłówkowym \lstinline{math.h}.}
+\awesomebox[teal]{2pt}{\faCode}{teal}{Aby wyświetlić własny symbol wystarczy po prostu wypisać znak o odpowiednim numerze z pamięci CGRAM, np. dla pierwszego symbolu (pod adresem \lstinline{0x00}) będzie to instrukcja \lstinline{lcd.write('\\x00');}.}

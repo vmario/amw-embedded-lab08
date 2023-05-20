@@ -1,11 +1,3 @@
-/**
- * @file
- * @author Mariusz Chilmon <mariusz.chilmon@ctm.gdynia.pl>
- * @date 2023
- * 
- * Komendy sterujące wyświetlaczem.
- */
-
 #pragma once
 
 #include "lcdDriver.hpp"
@@ -126,4 +118,3 @@ struct CommandSetDdramAddress {
 private:
 	const Command command; ///< Komenda z przypisanymi opcjami.
 };
-
